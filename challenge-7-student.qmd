@@ -1,15 +1,27 @@
 ---
 title: "Challenge 7: Incorporating Multiple Inputs"
 subtitle: "Functions + Fish"
-author: "Your name here!"
-format: html
+author: "Amir Sepasian"
 editor: source
 embed-resources: true
+format: 
+  html:  
+    embed-resources: true
+    code-tools: true
+    toc: true
+    df-print: paged
+execute: 
+  echo: true
+  warning: false
+  message: false
+code-fold: true
 ---
 
 ```{r}
 #| label: setup
 
+library(tidyverse)
+fish <- read.csv(here::here("data", "BlackfootFish.csv"))
 
 ```
 
@@ -26,6 +38,10 @@ $$\text{condition index} = \frac{weight}{length^3} \times 100$$
 ```{r}
 #| label: transform-data-to-have-correct-units
 
+
+fish |>
+  mutate(length = length / 10)
+
 ```
 
 **2. Collecting data of this sort can be very messy! Write a function that will replace unlikely `length` and `weight` measurements with `NA`. Your function should accept at least three inputs:**
@@ -40,8 +56,17 @@ $$\text{condition index} = \frac{weight}{length^3} \times 100$$
 If you are struggling with the structure of your function, I would suggest reading the [Mutating Function](https://r4ds.hadley.nz/functions.html#mutate-functions) from R4DS.
 :::
 
+ChatGBT Link: https://chatgpt.com/share/67324ea1-f0a0-8011-8fd5-fa37bd205e4f
+
 ```{r}
 #| label: function-to-change-impossible-measurements-to-NA
+
+apply_na <- function(vect, low, high) {
+  
+  vect <- ifelse(vect < low | vect > high, NA, vect)
+  return(vect)
+  
+}
 
 ```
 
@@ -49,6 +74,10 @@ If you are struggling with the structure of your function, I would suggest readi
 
 ```{r}
 #| label: modify-impossible-values-of-length-weight
+
+fish |>
+  mutate(length = apply_na(length, 5, 80),
+         weight = apply_na(weight, 10, 4000))
 
 ```
 
@@ -63,6 +92,12 @@ dataset and variable names as inputs)!
 ```{r}
 #| label: condition-function
 
+cond_index <- function(length, weight){
+  
+  return((weight / length^3) * 100)
+  
+}
+
 ```
 
 **4. Make a thoughtful visualization of how fish conditions have varied over the duration of this study.**
@@ -75,5 +110,15 @@ dataset and variable names as inputs)!
 
 ```{r}
 #| label: condition-indices-over-time
+
+fish |>
+  mutate(cond_index = cond_index(length, weight)) |>
+  ggplot(aes(x = factor(year), y = cond_index)) +
+  geom_bar(fill = 'orange3',
+           stat = 'identity') +
+  labs(x = 'Year',
+       y = '',
+       title = 'Blackfoot Fish Condition Evolution',
+       subtitle = 'Condition Index')
 
 ```
