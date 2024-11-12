@@ -82,7 +82,7 @@ fish |>
                        `2` = 'Trip 2')) |>
   summarise(na_count = n(),
             .groups = 'drop') |>
-  ggplot(aes(x = year, 
+  ggplot(aes(x = factor(year), 
              y = na_count, 
              fill = section)) +
   geom_bar(stat = 'identity',
