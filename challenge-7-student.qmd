@@ -39,7 +39,7 @@ $$\text{condition index} = \frac{weight}{length^3} \times 100$$
 #| label: transform-data-to-have-correct-units
 
 
-fish |>
+fish <- fish |>
   mutate(length = length / 10)
 
 ```
@@ -63,8 +63,10 @@ ChatGBT Link: https://chatgpt.com/share/67324ea1-f0a0-8011-8fd5-fa37bd205e4f
 
 apply_na <- function(vect, low, high) {
   
-  vect <- ifelse(vect < low | vect > high, NA, vect)
-  return(vect)
+  stopifnot(is.numeric(vect))
+  case_when(vect < low ~ NA,
+            vect > high ~NA,
+            .default = vect)
   
 }
 
@@ -75,7 +77,7 @@ apply_na <- function(vect, low, high) {
 ```{r}
 #| label: modify-impossible-values-of-length-weight
 
-fish |>
+fish <- fish |>
   mutate(length = apply_na(length, 5, 80),
          weight = apply_na(weight, 10, 4000))
 
@@ -113,12 +115,18 @@ cond_index <- function(length, weight){
 
 fish |>
   mutate(cond_index = cond_index(length, weight)) |>
-  ggplot(aes(x = factor(year), y = cond_index)) +
-  geom_bar(fill = 'orange3',
-           stat = 'identity') +
+  group_by(year, species) |>
+  summarize(avg_cond = mean(cond_index, na.rm = TRUE), .groups = 'drop') |>
+  ggplot(aes(x = year, 
+             y = avg_cond, 
+             color = species)) +
+  geom_smooth(se = FALSE) +
   labs(x = 'Year',
        y = '',
        title = 'Blackfoot Fish Condition Evolution',
-       subtitle = 'Condition Index')
+       subtitle = 'Condition Index',
+       color = 'species') +
+  scale_y_continuous(limits = c(0, 2)) +
+  theme_bw()
 
 ```
